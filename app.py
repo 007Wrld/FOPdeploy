@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, render_template
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, AutoModelForSeq2SeqLM
 from googletrans import Translator
 from deep_translator import GoogleTranslator
@@ -6,20 +6,32 @@ import os
 
 app = Flask(__name__)
 
-# Load models and tokenizers
-try:
-    tokenizer_sentiment = AutoTokenizer.from_pretrained("cardiffnlp/twitter-xlm-roberta-base-sentiment")
-    model_sentiment = AutoModelForSequenceClassification.from_pretrained("cardiffnlp/twitter-xlm-roberta-base-sentiment")
-except Exception as e:
-    raise EnvironmentError(f"Failed to load sentiment model: {e}")
+# Declare global variables for models and tokenizers but don't load them yet
+tokenizer_sentiment = None
+model_sentiment = None
 
-try:
-    summarizer_tokenizer = AutoTokenizer.from_pretrained("facebook/bart-large-cnn")
-    summarizer_model = AutoModelForSeq2SeqLM.from_pretrained("facebook/bart-large-cnn")
-except Exception as e:
-    raise EnvironmentError(f"Failed to load summarization model: {e}")
+tokenizer_summarizer = None
+model_summarizer = None
 
 translator = Translator()
+
+# Lazy load sentiment model
+def load_sentiment_model():
+    global tokenizer_sentiment, model_sentiment
+    if tokenizer_sentiment is None or model_sentiment is None:
+        print("Loading sentiment analysis model...")
+        tokenizer_sentiment = AutoTokenizer.from_pretrained("cardiffnlp/twitter-xlm-roberta-base-sentiment")
+        model_sentiment = AutoModelForSequenceClassification.from_pretrained("cardiffnlp/twitter-xlm-roberta-base-sentiment")
+    return tokenizer_sentiment, model_sentiment
+
+# Lazy load summarization model
+def load_summarizer_model():
+    global tokenizer_summarizer, model_summarizer
+    if tokenizer_summarizer is None or model_summarizer is None:
+        print("Loading summarization model...")
+        tokenizer_summarizer = AutoTokenizer.from_pretrained("facebook/bart-large-cnn")
+        model_summarizer = AutoModelForSeq2SeqLM.from_pretrained("facebook/bart-large-cnn")
+    return tokenizer_summarizer, model_summarizer
 
 # Fallback translation function
 def safe_translate(text, target="en"):
@@ -34,13 +46,19 @@ def safe_translate(text, target="en"):
 
 # Helper function to summarize text
 def summarize_text(text):
-    inputs = summarizer_tokenizer(text, return_tensors="pt", max_length=1024, truncation=True)
-    summary = summarizer_model.generate(inputs['input_ids'], max_length=150, num_beams=4, early_stopping=True)
-    summary_text = summarizer_tokenizer.decode(summary[0], skip_special_tokens=True)
+    # Lazy load summarization model
+    tokenizer_summarizer, model_summarizer = load_summarizer_model()
+    
+    inputs = tokenizer_summarizer(text, return_tensors="pt", max_length=1024, truncation=True)
+    summary = model_summarizer.generate(inputs['input_ids'], max_length=150, num_beams=4, early_stopping=True)
+    summary_text = tokenizer_summarizer.decode(summary[0], skip_special_tokens=True)
     return summary_text
 
 # Helper function for sentiment analysis
 def analyze_sentiment(text):
+    # Lazy load sentiment model
+    tokenizer_sentiment, model_sentiment = load_sentiment_model()
+    
     inputs = tokenizer_sentiment(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
     outputs = model_sentiment(**inputs)
     logits = outputs.logits
@@ -89,4 +107,3 @@ def home():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
