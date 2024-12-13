@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, AutoModelForSeq2SeqLM
 from googletrans import Translator
+import os
 
 app = Flask(__name__)
 
@@ -55,7 +56,7 @@ def home():
     
     return render_template("index.html", sentiment=None, summary=None, original_text=None)
 
+# Run the app with dynamic port binding for Render
 if __name__ == "__main__":
-    from app import app
-    app.run(debug=True)
-
+    port = int(os.environ.get("PORT", 5000))  # Use Render's dynamic port
+    app.run(debug=True, host='0.0.0.0', port=port)
