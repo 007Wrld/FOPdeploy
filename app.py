@@ -124,9 +124,6 @@ with st.container():
         if detected_language != 'en':
             translated_text = translator.translate(input_text, dest='en').text
             
-            # Manually check for known slang or phrases and adjust translation
-            if "ang baho mo" in input_text.lower():
-                translated_text = "You smell bad"  # Custom translation for this case
             
             st.write("Translated Text:")
             st.write(translated_text)
