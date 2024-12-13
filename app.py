@@ -1,16 +1,24 @@
 from flask import Flask, request, jsonify, render_template
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, AutoModelForSeq2SeqLM
 from googletrans import Translator
+from deep_translator import GoogleTranslator
 import os
 
 app = Flask(__name__)
 
 # Load models
-tokenizer_sentiment = AutoTokenizer.from_pretrained("cardiffnlp/twitter-xlm-roberta-base-sentiment")
-model_sentiment = AutoModelForSequenceClassification.from_pretrained("cardiffnlp/twitter-xlm-roberta-base-sentiment")
-summarizer_model = AutoModelForSeq2SeqLM.from_pretrained("jaesani/large_eng_summarizer")
-summarizer_tokenizer = AutoTokenizer.from_pretrained("jaesani/large_eng_summarizer")
+tokenizer_sentiment = AutoTokenizer.from_pretrained("./models/twitter-xlm-roberta-sentiment")
+model_sentiment = AutoModelForSequenceClassification.from_pretrained("./models/twitter-xlm-roberta-sentiment")
+summarizer_model = AutoModelForSeq2SeqLM.from_pretrained("./models/large_eng_summarizer")
+summarizer_tokenizer = AutoTokenizer.from_pretrained("./models/large_eng_summarizer")
 translator = Translator()
+
+# Fallback translation function
+def safe_translate(text, target="en"):
+    try:
+        return translator.translate(text, dest=target).text
+    except Exception:
+        return GoogleTranslator(source="auto", target=target).translate(text)
 
 # Helper function to summarize text
 def summarize_text(text):
@@ -39,7 +47,7 @@ def home():
         
         # If the language is not English, translate it
         if detected_language != 'en':
-            translated_text = translator.translate(input_text, dest='en').text
+            translated_text = safe_translate(input_text, target='en')
         else:
             translated_text = input_text
         
@@ -52,12 +60,13 @@ def home():
         # Get sentiment (based on summarized or original text)
         sentiment = analyze_sentiment(summarized_text)
         
-        return render_template("index.html", sentiment=sentiment, summary=summarized_text, original_text=input_text)
+        return render_template(
+            "index.html", sentiment=sentiment, summary=summarized_text, 
+            original_text=input_text, translated_text=translated_text
+        )
     
-    return render_template("index.html", sentiment=None, summary=None, original_text=None)
+    return render_template("index.html", sentiment=None, summary=None, original_text=None, translated_text=None)
 
 if __name__ == "__main__":
-    import os
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, host="0.0.0.0", port=port)
-
