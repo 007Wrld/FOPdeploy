@@ -110,7 +110,10 @@ st.markdown("""
 with st.container():
     input_text = st.text_area("Enter your text here...", height=150)
 
-    if input_text:
+    # Button to trigger analysis
+    analyze_button = st.button("Analyze")
+
+    if analyze_button and input_text:
         # Detect the language of the text
         detected_language = translator.detect(input_text).lang
 
