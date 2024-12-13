@@ -134,7 +134,8 @@ with st.container():
             translated_text = input_text
 
         # Summarize the text if it's longer than 250 words
-        if len(translated_text.split()) > 250:
+        word_count = len(translated_text.split())
+        if word_count > 250:
             summarized_text = summarize_text(translated_text)
             st.write("Summary:")
             st.write(summarized_text)
