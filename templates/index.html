@@ -1,0 +1,47 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOP Sentiment Analysis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <h1>FOP Sentiment Analysis</h1>
+            <!-- Removed the paragraph below -->
+            <!-- <p>Analyze the sentiment and get a quick summary of your text in seconds.</p> -->
+        </div>
+
+        <!-- Input Form -->
+        <form method="POST" class="input-form">
+            <textarea name="text" rows="5" placeholder="Enter your text here..." required></textarea>
+            <button type="submit">Analyze</button>
+        </form>
+
+        <!-- Result Section -->
+        {% if original_text %}
+            <div class="result-section">
+                <h3>Original Text:</h3>
+                <p class="original-text">{{ original_text }}</p>
+                
+                {% if translated_text %}
+                    <h3>Translated Text:</h3>
+                    <p class="translated-text">{{ translated_text }}</p>
+                {% endif %}
+                
+                {% if sentiment %}
+                    <h3>Sentiment: <span class="sentiment {{ sentiment }}">{{ sentiment.capitalize() }}</span></h3>
+                {% endif %}
+                
+                {% if summary %}
+                    <h3>Summary:</h3>
+                    <p class="summary-text">{{ summary }}</p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
