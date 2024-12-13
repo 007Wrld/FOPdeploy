@@ -1,6 +1,9 @@
 import streamlit as st
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, AutoModelForSeq2SeqLM
 from googletrans import Translator
+import os
+
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # Load models
 tokenizer_sentiment = AutoTokenizer.from_pretrained("cardiffnlp/twitter-xlm-roberta-base-sentiment")
