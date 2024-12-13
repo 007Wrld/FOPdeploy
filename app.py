@@ -33,21 +33,37 @@ st.markdown("""
     <style>
         body {
             font-family: 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
             background-color: #2a2a2a;
             color: white;
+            overflow-y: auto;
         }
         .container {
             text-align: center;
             max-width: 800px;
-            margin: 0 auto;
+            margin: 0 20px;
             padding: 20px;
             background-color: #333;
             border-radius: 15px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            box-sizing: border-box;
+        }
+        .hero-section {
+            margin-bottom: 30px;
         }
         h1 {
             font-size: 3rem;
+            margin: 0;
             color: #fff;
+        }
+        p {
+            font-size: 1.2rem;
+            color: #bbb;
         }
         .input-form textarea {
             width: 100%;
@@ -59,11 +75,20 @@ st.markdown("""
             color: white;
             font-size: 1.1rem;
             line-height: 1.5;
-            resize: none;
-            height: auto;
+        }
+        .input-form button {
+            padding: 10px 30px;
+            margin-top: 20px;
+            background-color: #1db954;
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
         }
         .result-section {
             margin-top: 40px;
+            text-align: left;
             color: white;
         }
         .sentiment {
@@ -81,18 +106,22 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Input form container
+# Container for the input form
 with st.container():
-    # Create the input form
     input_text = st.text_area("Enter your text here...", height=150)
 
     if input_text:
         # Detect the language of the text
         detected_language = translator.detect(input_text).lang
 
-        # Translate text if not English
+        # Translate text if not English, handling some specific phrases
         if detected_language != 'en':
             translated_text = translator.translate(input_text, dest='en').text
+            
+            # Manually check for known slang or phrases and adjust translation
+            if "ang baho mo" in input_text.lower():
+                translated_text = "You smell bad"  # Custom translation for this case
+            
             st.write("Translated Text:")
             st.write(translated_text)
         else:
