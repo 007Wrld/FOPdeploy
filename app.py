@@ -1,9 +1,8 @@
-import streamlit as st
+from flask import Flask, request, jsonify, render_template
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, AutoModelForSeq2SeqLM
 from googletrans import Translator
-import os
 
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
+app = Flask(__name__)
 
 # Load models
 tokenizer_sentiment = AutoTokenizer.from_pretrained("cardiffnlp/twitter-xlm-roberta-base-sentiment")
@@ -28,117 +27,35 @@ def analyze_sentiment(text):
     sentiment_label = ["negative", "neutral", "positive"][sentiment]
     return sentiment_label
 
-# Streamlit app layout
-st.title("FOP Sentiment Analysis")
-
-# Custom CSS for the app
-st.markdown("""
-    <style>
-        body {
-            font-family: 'Helvetica Neue', sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #2a2a2a;
-            color: white;
-            overflow-y: auto;
-        }
-        .container {
-            text-align: center;
-            max-width: 800px;
-            margin: 0 20px;
-            padding: 20px;
-            background-color: #333;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            box-sizing: border-box;
-        }
-        .hero-section {
-            margin-bottom: 30px;
-        }
-        h1 {
-            font-size: 3rem;
-            margin: 0;
-            color: #fff;
-        }
-        p {
-            font-size: 1.2rem;
-            color: #bbb;
-        }
-        .input-form textarea {
-            width: 100%;
-            padding: 15px;
-            margin-top: 20px;
-            border-radius: 10px;
-            border: 1px solid #666;
-            background-color: #444;
-            color: white;
-            font-size: 1.1rem;
-            line-height: 1.5;
-        }
-        .input-form button {
-            padding: 10px 30px;
-            margin-top: 20px;
-            background-color: #1db954;
-            border: none;
-            border-radius: 30px;
-            color: white;
-            font-size: 1.2rem;
-            cursor: pointer;
-        }
-        .result-section {
-            margin-top: 40px;
-            text-align: left;
-            color: white;
-        }
-        .sentiment {
-            font-weight: bold;
-        }
-        .sentiment.positive {
-            color: #1db954;
-        }
-        .sentiment.negative {
-            color: #e0245e;
-        }
-        .sentiment.neutral {
-            color: #b3b3b3;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-# Container for the input form
-with st.container():
-    input_text = st.text_area("Enter your text here...", height=150)
-
-    # Button to trigger analysis
-    analyze_button = st.button("Analyze")
-
-    if analyze_button and input_text:
+# Route to handle the form and display results
+@app.route("/", methods=["GET", "POST"])
+def home():
+    if request.method == "POST":
+        input_text = request.form["text"]
+        
         # Detect the language of the text
         detected_language = translator.detect(input_text).lang
-
-        # Translate text if not English, handling some specific phrases
+        
+        # If the language is not English, translate it
         if detected_language != 'en':
             translated_text = translator.translate(input_text, dest='en').text
-            
-            
-            st.write("Translated Text:")
-            st.write(translated_text)
         else:
             translated_text = input_text
-
-        # Summarize the text if it's longer than 250 words
-        word_count = len(translated_text.split())
-        if word_count > 250:
+        
+        # Summarize the text (only if it's longer than 250 words)
+        if len(translated_text.split()) > 250:
             summarized_text = summarize_text(translated_text)
-            st.write("Summary:")
-            st.write(summarized_text)
         else:
             summarized_text = translated_text
-
-        # Get sentiment of the summarized or original text
+        
+        # Get sentiment (based on summarized or original text)
         sentiment = analyze_sentiment(summarized_text)
-        st.write(f"Sentiment: {sentiment.capitalize()}")
+        
+        return render_template("index.html", sentiment=sentiment, summary=summarized_text, original_text=input_text)
+    
+    return render_template("index.html", sentiment=None, summary=None, original_text=None)
+
+if __name__ == "__main__":
+    from app import app
+    app.run(debug=True)
+
