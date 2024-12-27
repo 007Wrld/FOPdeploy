@@ -2,11 +2,14 @@ from flask import Flask, request, jsonify, render_template
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, AutoModelForSeq2SeqLM
 from googletrans import Translator
 import requests
+import os
+
+
 
 app = Flask(__name__)
 
 # Define your Hugging Face API token and URL
-HF_API_TOKEN = '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'
+HF_API_TOKEN = os.getenv('HF_API_TOKEN')
 HF_API_URL = 'https://api-inference.huggingface.co/models'
 
 # Load models
