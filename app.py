@@ -1,46 +1,49 @@
 from flask import Flask, request, jsonify, render_template
 import requests
-from transformers import MarianMTModel, MarianTokenizer
 
 app = Flask(__name__)
 
-# Initialize the Hugging Face translation model
-translation_model_name = "Helsinki-NLP/opus-mt-en-x"  # English to many languages
-tokenizer = MarianTokenizer.from_pretrained(translation_model_name)
-model = MarianMTModel.from_pretrained(translation_model_name)
+# Helper function to send requests to Hugging Face Inference API
+def query_huggingface_api(model_url, inputs):
+    headers = {
+        "Authorization": "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"
+    }
+    response = requests.post(model_url, headers=headers, json={"inputs": inputs})
+    
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return {"error": "Unable to fetch result from Hugging Face API"}
 
-# Helper function for translation using Hugging Face model
+# Helper function for translation using Hugging Face API
 def translate_text(text, target_lang="en"):
-    # Translate text to the target language using Hugging Face's MarianMT
-    # 'en' represents English, but this model supports multiple languages
-    translated = model.generate(**tokenizer(text, return_tensors="pt", padding=True, truncation=True))
-    return tokenizer.decode(translated[0], skip_special_tokens=True)
+    model_url = f"https://api-inference.huggingface.co/models/Helsinki-NLP/opus-mt-{target_lang}-en"
+    translation = query_huggingface_api(model_url, text)
+    
+    if "error" in translation:
+        return "Error during translation"
+    
+    return translation[0]['translation_text']
 
 # Helper function for sentiment analysis using Hugging Face API
 def analyze_sentiment(text):
-    sentiment_model_url = "https://api-inference.huggingface.co/models/cardiffnlp/twitter-xlm-roberta-base-sentiment"
-    headers = {"Authorization": "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"}
+    model_url = "https://api-inference.huggingface.co/models/cardiffnlp/twitter-xlm-roberta-base-sentiment"
+    sentiment = query_huggingface_api(model_url, text)
     
-    response = requests.post(sentiment_model_url, headers=headers, json={"inputs": text})
+    if "error" in sentiment:
+        return "Error during sentiment analysis"
     
-    if response.status_code == 200:
-        sentiment = response.json()[0]['label']
-        return sentiment
-    else:
-        return "Error: Unable to fetch sentiment"
+    return sentiment[0]['label']
 
 # Helper function for summarization using Hugging Face API
 def summarize_text(text):
-    summarization_model_url = "https://api-inference.huggingface.co/models/facebook/bart-large-cnn"
-    headers = {"Authorization": "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"}
+    model_url = "https://api-inference.huggingface.co/models/facebook/bart-large-cnn"
+    summary = query_huggingface_api(model_url, text)
     
-    response = requests.post(summarization_model_url, headers=headers, json={"inputs": text})
+    if "error" in summary:
+        return "Error during summarization"
     
-    if response.status_code == 200:
-        summary = response.json()[0]['summary_text']
-        return summary
-    else:
-        return "Error: Unable to fetch summary"
+    return summary[0]['summary_text']
 
 @app.route("/", methods=["GET", "POST"])
 def home():
