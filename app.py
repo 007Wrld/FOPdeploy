@@ -1,49 +1,20 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, render_template
 import requests
 
 app = Flask(__name__)
 
-# Helper function to send requests to Hugging Face Inference API
-def query_huggingface_api(model_url, inputs):
+# Hugging Face API URLs (you need to replace with your own Hugging Face API token)
+translation_url = "https://api-inference.huggingface.co/models/Helsinki-NLP/opus-mt-en-XX"  # Use a proper translation model
+sentiment_url = "https://api-inference.huggingface.co/models/cardiffnlp/twitter-xlm-roberta-base-sentiment"  # Sentiment analysis model
+
+# Function to make requests to Hugging Face API
+def query_huggingface_api(input_text, model_url):
     headers = {
-        "Authorization": "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"
+        "Authorization": "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"  # Replace with your Hugging Face API key
     }
-    response = requests.post(model_url, headers=headers, json={"inputs": inputs})
-    
-    if response.status_code == 200:
-        return response.json()
-    else:
-        return {"error": "Unable to fetch result from Hugging Face API"}
-
-# Helper function for translation using Hugging Face API
-def translate_text(text, target_lang="en"):
-    model_url = f"https://api-inference.huggingface.co/models/Helsinki-NLP/opus-mt-{target_lang}-en"
-    translation = query_huggingface_api(model_url, text)
-    
-    if "error" in translation:
-        return "Error during translation"
-    
-    return translation[0]['translation_text']
-
-# Helper function for sentiment analysis using Hugging Face API
-def analyze_sentiment(text):
-    model_url = "https://api-inference.huggingface.co/models/cardiffnlp/twitter-xlm-roberta-base-sentiment"
-    sentiment = query_huggingface_api(model_url, text)
-    
-    if "error" in sentiment:
-        return "Error during sentiment analysis"
-    
-    return sentiment[0]['label']
-
-# Helper function for summarization using Hugging Face API
-def summarize_text(text):
-    model_url = "https://api-inference.huggingface.co/models/facebook/bart-large-cnn"
-    summary = query_huggingface_api(model_url, text)
-    
-    if "error" in summary:
-        return "Error during summarization"
-    
-    return summary[0]['summary_text']
+    payload = {"inputs": input_text}
+    response = requests.post(model_url, headers=headers, json=payload)
+    return response.json()
 
 @app.route("/", methods=["GET", "POST"])
 def home():
@@ -51,25 +22,27 @@ def home():
         if request.method == "POST":
             input_text = request.form["text"]
             
-            # Detect language and translate to English if needed
-            # (For simplicity, let's assume we're always translating to English)
-            translated_text = translate_text(input_text, target_lang="en")
-            
-            # Summarize text (if it's long enough)
-            if len(translated_text.split()) > 250:
-                summarized_text = summarize_text(translated_text)
+            # Translate text if not English (Detect language and translate if necessary)
+            detected_language = 'en'  # Assume English for simplicity (you can add actual detection here)
+            if detected_language != 'en':
+                translation_response = query_huggingface_api(input_text, translation_url)
+                if "error" in translation_response:
+                    return render_template("index.html", sentiment=None, summary=None, original_text=input_text, error="Error during translation")
+                translated_text = translation_response[0]['translation_text']
             else:
-                summarized_text = translated_text
+                translated_text = input_text
             
-            # Analyze sentiment
-            sentiment = analyze_sentiment(summarized_text)
+            # Sentiment analysis
+            sentiment_response = query_huggingface_api(translated_text, sentiment_url)
+            if "error" in sentiment_response:
+                return render_template("index.html", sentiment=None, summary=None, original_text=input_text, error="Error during sentiment analysis")
             
-            return render_template("index.html", sentiment=sentiment, summary=summarized_text, original_text=input_text)
+            sentiment = sentiment_response[0]['label']
+            return render_template("index.html", sentiment=sentiment, summary=translated_text, original_text=input_text)
         
         return render_template("index.html", sentiment=None, summary=None, original_text=None)
-    
     except Exception as e:
-        return jsonify({"error": str(e)})
+        return render_template("index.html", sentiment=None, summary=None, original_text=None, error=str(e))
 
 if __name__ == "__main__":
     app.run(debug=True)
