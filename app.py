@@ -1,42 +1,46 @@
 from flask import Flask, request, jsonify, render_template
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, AutoModelForSeq2SeqLM
-from googletrans import Translator
+import requests
+from transformers import MarianMTModel, MarianTokenizer
 
 app = Flask(__name__)
 
-# Initialize variables for models and tokenizer
-tokenizer_sentiment = None
-model_sentiment = None
-summarizer_model = None
-summarizer_tokenizer = None
-translator = Translator()
+# Initialize the Hugging Face translation model
+translation_model_name = "Helsinki-NLP/opus-mt-en-x"  # English to many languages
+tokenizer = MarianTokenizer.from_pretrained(translation_model_name)
+model = MarianMTModel.from_pretrained(translation_model_name)
 
-# Lazy load models
-def load_sentiment_model():
-    global tokenizer_sentiment, model_sentiment
-    if tokenizer_sentiment is None or model_sentiment is None:
-        tokenizer_sentiment = AutoTokenizer.from_pretrained("cardiffnlp/twitter-xlm-roberta-base-sentiment")
-        model_sentiment = AutoModelForSequenceClassification.from_pretrained("cardiffnlp/twitter-xlm-roberta-base-sentiment")
+# Helper function for translation using Hugging Face model
+def translate_text(text, target_lang="en"):
+    # Translate text to the target language using Hugging Face's MarianMT
+    # 'en' represents English, but this model supports multiple languages
+    translated = model.generate(**tokenizer(text, return_tensors="pt", padding=True, truncation=True))
+    return tokenizer.decode(translated[0], skip_special_tokens=True)
 
-def load_summarizer_model():
-    global summarizer_model, summarizer_tokenizer
-    if summarizer_model is None or summarizer_tokenizer is None:
-        summarizer_model = AutoModelForSeq2SeqLM.from_pretrained("jaesani/large_eng_summarizer")
-        summarizer_tokenizer = AutoTokenizer.from_pretrained("jaesani/large_eng_summarizer")
-
-# Helper function to summarize text
-def summarize_text(text):
-    inputs = summarizer_tokenizer(text, return_tensors="pt", max_length=512, truncation=True)
-    summary = summarizer_model.generate(inputs['input_ids'], max_length=150, num_beams=4, early_stopping=True)
-    return summarizer_tokenizer.decode(summary[0], skip_special_tokens=True)
-
-# Helper function for sentiment analysis
+# Helper function for sentiment analysis using Hugging Face API
 def analyze_sentiment(text):
-    inputs = tokenizer_sentiment(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
-    outputs = model_sentiment(**inputs)
-    logits = outputs.logits
-    sentiment = logits.argmax().item()
-    return ["negative", "neutral", "positive"][sentiment]
+    sentiment_model_url = "https://api-inference.huggingface.co/models/cardiffnlp/twitter-xlm-roberta-base-sentiment"
+    headers = {"Authorization": "Bearer YOUR_HUGGINGFACE_API_TOKEN"}
+    
+    response = requests.post(sentiment_model_url, headers=headers, json={"inputs": text})
+    
+    if response.status_code == 200:
+        sentiment = response.json()[0]['label']
+        return sentiment
+    else:
+        return "Error: Unable to fetch sentiment"
+
+# Helper function for summarization using Hugging Face API
+def summarize_text(text):
+    summarization_model_url = "https://api-inference.huggingface.co/models/facebook/bart-large-cnn"
+    headers = {"Authorization": "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"}
+    
+    response = requests.post(summarization_model_url, headers=headers, json={"inputs": text})
+    
+    if response.status_code == 200:
+        summary = response.json()[0]['summary_text']
+        return summary
+    else:
+        return "Error: Unable to fetch summary"
 
 @app.route("/", methods=["GET", "POST"])
 def home():
@@ -44,26 +48,23 @@ def home():
         if request.method == "POST":
             input_text = request.form["text"]
             
-            # Detect the language of the text
-            detected_language = translator.detect(input_text).lang
+            # Detect language and translate to English if needed
+            # (For simplicity, let's assume we're always translating to English)
+            translated_text = translate_text(input_text, target_lang="en")
             
-            # Translate if needed
-            translated_text = translator.translate(input_text, dest='en').text if detected_language != 'en' else input_text
-            
-            # Summarize text
+            # Summarize text (if it's long enough)
             if len(translated_text.split()) > 250:
-                load_summarizer_model()
                 summarized_text = summarize_text(translated_text)
             else:
                 summarized_text = translated_text
             
             # Analyze sentiment
-            load_sentiment_model()
             sentiment = analyze_sentiment(summarized_text)
             
             return render_template("index.html", sentiment=sentiment, summary=summarized_text, original_text=input_text)
         
         return render_template("index.html", sentiment=None, summary=None, original_text=None)
+    
     except Exception as e:
         return jsonify({"error": str(e)})
 
