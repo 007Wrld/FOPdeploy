@@ -13,7 +13,7 @@ sentiment_url = "https://api-inference.huggingface.co/models/cardiffnlp/twitter-
 # Function to make requests to Hugging Face API for sentiment analysis
 def query_huggingface_api(input_text, model_url):
     headers = {
-        "Authorization": "Bearer YOUR_HUGGINGFACE_API_KEY"  # Replace with your Hugging Face API key
+        "Authorization": "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"  # Replace with your Hugging Face API key
     }
     payload = {"inputs": input_text}
     try:
@@ -51,7 +51,10 @@ def home():
                 print(f"Sentiment Analysis Error: {sentiment_response['error']}")  # Debugging output
                 return render_template("index.html", sentiment=None, summary=None, original_text=input_text, error=sentiment_response['error'])
             
-            sentiment = sentiment_response[0]['label']
+            if not sentiment_response:  # Check if the response is empty or invalid
+                return render_template("index.html", sentiment=None, summary=None, original_text=input_text, error="Received empty response from sentiment API")
+
+            sentiment = sentiment_response[0].get('label', 'Unknown')  # Safely extract sentiment label
             return render_template("index.html", sentiment=sentiment, summary=translated_text, original_text=input_text)
         
         return render_template("index.html", sentiment=None, summary=None, original_text=None)
