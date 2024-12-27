@@ -3,3 +3,4 @@ requests
 huggingface-hub
 numpy
 Werkzeug
+googletrans
