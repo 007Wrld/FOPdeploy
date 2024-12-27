@@ -19,7 +19,7 @@ def translate_text(text, target_lang="en"):
 # Helper function for sentiment analysis using Hugging Face API
 def analyze_sentiment(text):
     sentiment_model_url = "https://api-inference.huggingface.co/models/cardiffnlp/twitter-xlm-roberta-base-sentiment"
-    headers = {"Authorization": "Bearer YOUR_HUGGINGFACE_API_TOKEN"}
+    headers = {"Authorization": "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"}
     
     response = requests.post(sentiment_model_url, headers=headers, json={"inputs": text})
     
