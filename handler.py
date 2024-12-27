@@ -6,8 +6,8 @@ from googletrans import Translator
 
 app = Flask(__name__)
 
-# Hugging Face API token and URL from environment variables
-HF_API_TOKEN = os.getenv('HF_API_TOKEN', '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')  # Default for local testing
+# Hugging Face API token from environment variables
+HF_API_TOKEN = os.getenv('HF_API_TOKEN')
 HF_API_URL = 'https://api-inference.huggingface.co/models'
 
 # Load models
@@ -30,13 +30,9 @@ def analyze_sentiment_hf(text):
         response = requests.post(f"{HF_API_URL}/cardiffnlp/twitter-xlm-roberta-base-sentiment", headers=headers, json=data)
         response.raise_for_status()  # Check for errors
         sentiment = response.json()
-        
         if isinstance(sentiment, list) and len(sentiment) > 0:
             sentiment_result = sentiment[0]  # First sentiment result
-            if isinstance(sentiment_result, list) and len(sentiment_result) > 0:
-                return sentiment_result[0].get('label', 'No label found')
-            else:
-                return "Error with sentiment label"
+            return sentiment_result[0].get('label', 'No label found') if isinstance(sentiment_result, list) else "Error with sentiment label"
         else:
             return "Unexpected response format"
     except requests.exceptions.RequestException as e:
@@ -47,24 +43,22 @@ def home():
     if request.method == "POST":
         input_text = request.form["text"]
         detected_language = translator.detect(input_text).lang
-        
         if detected_language != 'en':
             translated_text = translator.translate(input_text, dest='en').text
         else:
             translated_text = input_text
-        
+
         if len(translated_text.split()) > 250:
             summarized_text = summarize_text(translated_text)
         else:
             summarized_text = translated_text
-        
+
         sentiment = analyze_sentiment_hf(summarized_text)
-        
         return render_template("index.html", sentiment=sentiment, summary=summarized_text, original_text=input_text)
-    
+
     return render_template("index.html", sentiment=None, summary=None, original_text=None)
 
-# Make sure Vercel knows how to handle the Flask app
+# Handler for Vercel's serverless function
 def handler(request):
     with app.app_context():
         return app.full_dispatch_request()
