@@ -1,13 +1,16 @@
 from flask import Flask, request, render_template
+from googletrans import Translator  # Use googletrans for translation
 import requests
 
 app = Flask(__name__)
 
-# Hugging Face API URLs (you need to replace with your own Hugging Face API token)
-translation_url = "https://api-inference.huggingface.co/models/Helsinki-NLP/opus-mt-en-XX"  # Use a proper translation model
+# Initialize translator (googletrans)
+translator = Translator()
+
+# Hugging Face Sentiment Analysis model URL
 sentiment_url = "https://api-inference.huggingface.co/models/cardiffnlp/twitter-xlm-roberta-base-sentiment"  # Sentiment analysis model
 
-# Function to make requests to Hugging Face API
+# Function to make requests to Hugging Face API for sentiment analysis
 def query_huggingface_api(input_text, model_url):
     headers = {
         "Authorization": "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"  # Replace with your Hugging Face API key
@@ -22,17 +25,16 @@ def home():
         if request.method == "POST":
             input_text = request.form["text"]
             
-            # Translate text if not English (Detect language and translate if necessary)
-            detected_language = 'en'  # Assume English for simplicity (you can add actual detection here)
+            # Detect the language of the input text using googletrans
+            detected_language = translator.detect(input_text).lang
+            
+            # Translate if the text is not in English
             if detected_language != 'en':
-                translation_response = query_huggingface_api(input_text, translation_url)
-                if "error" in translation_response:
-                    return render_template("index.html", sentiment=None, summary=None, original_text=input_text, error="Error during translation")
-                translated_text = translation_response[0]['translation_text']
+                translated_text = translator.translate(input_text, dest='en').text
             else:
                 translated_text = input_text
             
-            # Sentiment analysis
+            # Sentiment analysis using Hugging Face
             sentiment_response = query_huggingface_api(translated_text, sentiment_url)
             if "error" in sentiment_response:
                 return render_template("index.html", sentiment=None, summary=None, original_text=input_text, error="Error during sentiment analysis")
