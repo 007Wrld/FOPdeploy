@@ -22,7 +22,9 @@ def summarize_text_hf(text):
         response = requests.post(f"{HF_API_URL}/jaesani/large_eng_summarizer", headers=headers, json=data)
         response.raise_for_status()  # Raise exception for HTTP errors
         summary = response.json()
-        return summary[0]['summary_text'] if isinstance(summary, list) and summary else "Error with summarization"
+        if isinstance(summary, list) and len(summary) > 0:
+            return summary[0].get('summary_text', "Error with summarization")
+        return "Error with summarization response"
     except requests.exceptions.RequestException as e:
         print(f"Error making API request for summarization: {e}")
         return "Error with summarization API"
@@ -40,13 +42,13 @@ def analyze_sentiment_hf(text):
         response.raise_for_status()  # Raise an exception for HTTP errors
 
         sentiment = response.json()
-
-        # Access and parse the response structure
-        if isinstance(sentiment, list) and len(sentiment) > 0 and 'label' in sentiment[0]:
-            return sentiment[0]['label']
-        else:
-            print("Unexpected response format:", sentiment)
-            return "Error with sentiment analysis response"
+        # Handle nested structure and find the sentiment with the highest score
+        if isinstance(sentiment, list) and len(sentiment) > 0:
+            sentiment_list = sentiment[0]  # Access the first list
+            if isinstance(sentiment_list, list):
+                best_sentiment = max(sentiment_list, key=lambda x: x.get('score', 0))
+                return best_sentiment.get('label', 'Unknown sentiment')
+        return "Unexpected response format"
     except requests.exceptions.RequestException as e:
         print(f"Error making API request for sentiment analysis: {e}")
         return "Error with sentiment analysis API"
