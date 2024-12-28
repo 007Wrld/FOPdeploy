@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, jsonify, render_template
 from googletrans import Translator
 import requests
 
@@ -67,8 +67,10 @@ def home():
         # If the language is not English, translate it
         if detected_language != 'en':
             translated_text = translator.translate(input_text, dest='en').text
+            translated_language = 'English'  # Since we always translate to English
         else:
             translated_text = input_text
+            translated_language = None  # No translation if the text is already in English
 
         # Summarize the text (only if it's longer than 250 words)
         if len(translated_text.split()) > 250:
@@ -80,9 +82,9 @@ def home():
         sentiment, sentiment_score = analyze_sentiment_hf(summarized_text)
 
         # Return the results, including translated_text and sentiment score
-        return render_template("index.html", sentiment=sentiment, sentiment_score=sentiment_score, summary=summarized_text, original_text=input_text, translated_text=translated_text)
+        return render_template("index.html", sentiment=sentiment, sentiment_score=sentiment_score, summary=summarized_text, original_text=input_text, translated_text=translated_text, detected_language=detected_language, translated_language=translated_language)
 
-    return render_template("index.html", sentiment=None, sentiment_score=None, summary=None, original_text=None, translated_text=None)
+    return render_template("index.html", sentiment=None, sentiment_score=None, summary=None, original_text=None, translated_text=None, detected_language=None, translated_language=None)
 
 if __name__ == "__main__":
     app.run(debug=True)
