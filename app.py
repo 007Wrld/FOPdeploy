@@ -10,6 +10,70 @@ HF_API_URL = 'https://api-inference.huggingface.co/models'
 
 translator = Translator()
 
+# Language code to full name mapping
+LANGUAGES = {
+    'af': 'Afrikaans',
+    'sq': 'Albanian',
+    'ar': 'Arabic',
+    'hy': 'Armenian',
+    'bn': 'Bengali',
+    'bs': 'Bosnian',
+    'ca': 'Catalan',
+    'hr': 'Croatian',
+    'cs': 'Czech',
+    'da': 'Danish',
+    'nl': 'Dutch',
+    'en': 'English',
+    'eo': 'Esperanto',
+    'et': 'Estonian',
+    'tl': 'Filipino (Tagalog)',
+    'fi': 'Finnish',
+    'fr': 'French',
+    'de': 'German',
+    'el': 'Greek',
+    'gu': 'Gujarati',
+    'hi': 'Hindi',
+    'hu': 'Hungarian',
+    'is': 'Icelandic',
+    'id': 'Indonesian',
+    'it': 'Italian',
+    'ja': 'Japanese',
+    'jw': 'Javanese',
+    'ka': 'Georgian',
+    'km': 'Khmer',
+    'ko': 'Korean',
+    'la': 'Latin',
+    'lv': 'Latvian',
+    'lt': 'Lithuanian',
+    'mk': 'Macedonian',
+    'ml': 'Malayalam',
+    'mr': 'Marathi',
+    'ne': 'Nepali',
+    'pl': 'Polish',
+    'pt': 'Portuguese',
+    'ro': 'Romanian',
+    'ru': 'Russian',
+    'sr': 'Serbian',
+    'si': 'Sinhala',
+    'sk': 'Slovak',
+    'sl': 'Slovenian',
+    'es': 'Spanish',
+    'su': 'Sundanese',
+    'sw': 'Swahili',
+    'sv': 'Swedish',
+    'ta': 'Tamil',
+    'te': 'Telugu',
+    'th': 'Thai',
+    'tr': 'Turkish',
+    'uk': 'Ukrainian',
+    'ur': 'Urdu',
+    'vi': 'Vietnamese',
+    'cy': 'Welsh',
+    'xh': 'Xhosa',
+    'zh-cn': 'Chinese (Simplified)',
+    'zh-tw': 'Chinese (Traditional)'
+}
+
 # Helper function to summarize text using Hugging Face API
 def summarize_text_hf(text):
     headers = {
@@ -64,6 +128,9 @@ def home():
         # Detect the language of the text
         detected_language = translator.detect(input_text).lang
 
+        # Convert the detected language code to full name
+        detected_language_name = LANGUAGES.get(detected_language, detected_language)
+
         # If the language is not English, translate it
         if detected_language != 'en':
             translated_text = translator.translate(input_text, dest='en').text
@@ -82,9 +149,9 @@ def home():
         sentiment, sentiment_score = analyze_sentiment_hf(summarized_text)
 
         # Return the results, including translated_text and sentiment score
-        return render_template("index.html", sentiment=sentiment, sentiment_score=sentiment_score, summary=summarized_text, original_text=input_text, translated_text=translated_text, detected_language=detected_language, translated_language=translated_language)
+        return render_template("index.html", sentiment=sentiment, sentiment_score=sentiment_score, summary=summarized_text, original_text=input_text, translated_text=translated_text, detected_language_name=detected_language_name, translated_language=translated_language)
 
-    return render_template("index.html", sentiment=None, sentiment_score=None, summary=None, original_text=None, translated_text=None, detected_language=None, translated_language=None)
+    return render_template("index.html", sentiment=None, sentiment_score=None, summary=None, original_text=None, translated_text=None, detected_language_name=None, translated_language=None)
 
 if __name__ == "__main__":
     app.run(debug=True)
