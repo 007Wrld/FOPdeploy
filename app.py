@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, render_template
 from googletrans import Translator
 import requests
 
@@ -77,9 +77,10 @@ def home():
         # Get sentiment (based on summarized or original text)
         sentiment = analyze_sentiment_hf(summarized_text)
 
-        return render_template("index.html", sentiment=sentiment, summary=summarized_text, original_text=input_text)
+        # Return the results, including translated_text
+        return render_template("index.html", sentiment=sentiment, summary=summarized_text, original_text=input_text, translated_text=translated_text)
 
-    return render_template("index.html", sentiment=None, summary=None, original_text=None)
+    return render_template("index.html", sentiment=None, summary=None, original_text=None, translated_text=None)
 
 if __name__ == "__main__":
     app.run(debug=True)
