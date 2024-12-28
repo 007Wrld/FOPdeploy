@@ -47,11 +47,13 @@ def analyze_sentiment_hf(text):
             sentiment_list = sentiment[0]  # Access the first list
             if isinstance(sentiment_list, list):
                 best_sentiment = max(sentiment_list, key=lambda x: x.get('score', 0))
-                return best_sentiment.get('label', 'Unknown sentiment')
-        return "Unexpected response format"
+                sentiment_label = best_sentiment.get('label', 'Unknown sentiment')
+                sentiment_score = best_sentiment.get('score', 0)
+                return sentiment_label, sentiment_score
+        return "Unexpected response format", 0
     except requests.exceptions.RequestException as e:
         print(f"Error making API request for sentiment analysis: {e}")
-        return "Error with sentiment analysis API"
+        return "Error with sentiment analysis API", 0
 
 # Route to handle the form and display results
 @app.route("/", methods=["GET", "POST"])
@@ -75,12 +77,12 @@ def home():
             summarized_text = translated_text
 
         # Get sentiment (based on summarized or original text)
-        sentiment = analyze_sentiment_hf(summarized_text)
+        sentiment, sentiment_score = analyze_sentiment_hf(summarized_text)
 
-        # Return the results, including translated_text
-        return render_template("index.html", sentiment=sentiment, summary=summarized_text, original_text=input_text, translated_text=translated_text)
+        # Return the results, including translated_text and sentiment score
+        return render_template("index.html", sentiment=sentiment, sentiment_score=sentiment_score, summary=summarized_text, original_text=input_text, translated_text=translated_text)
 
-    return render_template("index.html", sentiment=None, summary=None, original_text=None, translated_text=None)
+    return render_template("index.html", sentiment=None, sentiment_score=None, summary=None, original_text=None, translated_text=None)
 
 if __name__ == "__main__":
     app.run(debug=True)
