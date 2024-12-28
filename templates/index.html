@@ -25,9 +25,16 @@
                 <h3>Original Text:</h3>
                 <p class="original-text">{{ original_text }}</p>
 
+                {% if detected_language %}
+                    <h4>Detected Language: {{ detected_language }}</h4>
+                {% endif %}
+                
                 {% if translated_text %}
                     <h3>Translated Text:</h3>
                     <p class="translated-text">{{ translated_text }}</p>
+                    {% if translated_language %}
+                        <h4>Translated to: {{ translated_language }}</h4>
+                    {% endif %}
                 {% endif %}
 
                 {% if sentiment %}
