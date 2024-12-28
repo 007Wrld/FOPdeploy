@@ -32,6 +32,7 @@
 
                 {% if sentiment %}
                     <h3>Sentiment: <span class="sentiment {{ sentiment }}">{{ sentiment.capitalize() }}</span></h3>
+                    <p>Score: {{ sentiment_score }}</p>
                 {% endif %}
 
                 {% if summary %}
