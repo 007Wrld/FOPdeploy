@@ -11,8 +11,6 @@
         <!-- Hero Section -->
         <div class="hero-section">
             <h1>FOP Sentiment Analysis</h1>
-            <!-- Removed the paragraph below -->
-            <!-- <p>Analyze the sentiment and get a quick summary of your text in seconds.</p> -->
         </div>
 
         <!-- Input Form -->
@@ -26,16 +24,16 @@
             <div class="result-section">
                 <h3>Original Text:</h3>
                 <p class="original-text">{{ original_text }}</p>
-                
+
                 {% if translated_text %}
                     <h3>Translated Text:</h3>
                     <p class="translated-text">{{ translated_text }}</p>
                 {% endif %}
-                
+
                 {% if sentiment %}
                     <h3>Sentiment: <span class="sentiment {{ sentiment }}">{{ sentiment.capitalize() }}</span></h3>
                 {% endif %}
-                
+
                 {% if summary %}
                     <h3>Summary:</h3>
                     <p class="summary-text">{{ summary }}</p>
