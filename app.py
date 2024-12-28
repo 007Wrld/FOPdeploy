@@ -2,6 +2,9 @@ from flask import Flask, request, jsonify, render_template
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, AutoModelForSeq2SeqLM
 from googletrans import Translator
 import requests
+import os
+HF_API_TOKEN = os.getenv("HF_API_TOKEN")
+
 
 app = Flask(__name__)
 
