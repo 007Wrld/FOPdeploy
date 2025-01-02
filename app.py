@@ -173,7 +173,7 @@ LANGUAGES = {
 
 
 # Helper function to split the text into manageable chunks (1000 words per chunk)
-def split_text_into_chunks(text, chunk_size=1000):
+def split_text_into_chunks(text, chunk_size=500):
     words = text.split()
     num_chunks = math.ceil(len(words) / chunk_size)
     chunks = [' '.join(words[i * chunk_size:(i + 1) * chunk_size]) for i in range(num_chunks)]
