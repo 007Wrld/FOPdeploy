@@ -1,12 +1,16 @@
 import requests
 from flask import Flask, request, jsonify, render_template
 from googletrans import Translator
+from transformers import AutoTokenizer
 
 app = Flask(__name__)
 
 # Define your Hugging Face API token and URL
 HF_API_TOKEN = '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'
 HF_API_URL = 'https://api-inference.huggingface.co/models'
+
+# Load the Hugging Face tokenizer
+tokenizer = AutoTokenizer.from_pretrained("cardiffnlp/twitter-xlm-roberta-base-sentiment")
 
 translator = Translator()
 
@@ -169,24 +173,26 @@ LANGUAGES = {
     'fr': 'French',
     'de': 'German',
 }
+
 # Function to chunk text into smaller parts based on token count (500 tokens)
-def chunk_text(text, max_tokens=500):
-    words = text.split()  # Split the text into words
+def chunk_text(text, max_tokens=514):
+    # Tokenize the text using Hugging Face's tokenizer
+    tokens = tokenizer.tokenize(text)
     chunks = []
     chunk = []
     token_count = 0
 
-    for word in words:
-        token_count += len(word.split())  # Count tokens (words in this case)
+    for token in tokens:
+        token_count += 1
         if token_count > max_tokens:
-            chunks.append(" ".join(chunk))  # Join chunk into a string and add to list
-            chunk = [word]  # Start a new chunk
-            token_count = len(word.split())  # Reset token count for new chunk
+            chunks.append(tokenizer.convert_tokens_to_string(chunk))  # Join chunk into a string and add to list
+            chunk = [token]  # Start a new chunk
+            token_count = 1  # Reset token count for new chunk
         else:
-            chunk.append(word)
+            chunk.append(token)
     
     if chunk:
-        chunks.append(" ".join(chunk))  # Append the final chunk
+        chunks.append(tokenizer.convert_tokens_to_string(chunk))  # Append the final chunk
     
     return chunks
 
