@@ -171,13 +171,6 @@ LANGUAGES = {
 }
 
 
-# Helper function to split text into chunks for Google Translate
-def split_text_for_translation(text, max_length=5000):
-    """
-    Splits the text into smaller chunks, each within the Google Translate API limit.
-    """
-    return [text[i:i + max_length] for i in range(0, len(text), max_length)]
-
 # Helper function to summarize text using Hugging Face API
 def summarize_text_hf(text):
     headers = {
@@ -188,7 +181,7 @@ def summarize_text_hf(text):
     }
     try:
         response = requests.post(f"{HF_API_URL}/jaesani/large_eng_summarizer", headers=headers, json=data)
-        response.raise_for_status()
+        response.raise_for_status()  # Raise exception for HTTP errors
         summary = response.json()
         if isinstance(summary, list) and len(summary) > 0:
             return summary[0].get('summary_text', "Error with summarization")
@@ -196,6 +189,27 @@ def summarize_text_hf(text):
     except requests.exceptions.RequestException as e:
         print(f"Error making API request for summarization: {e}")
         return "Error with summarization API"
+
+# Helper function to split text into chunks
+def split_text_into_chunks(text, max_tokens=512):
+    words = text.split()
+    chunks = []
+    current_chunk = []
+    current_tokens = 0
+
+    for word in words:
+        current_tokens += len(word)  # Approximate token count using word length
+        if current_tokens > max_tokens:
+            chunks.append(" ".join(current_chunk))
+            current_chunk = [word]
+            current_tokens = len(word)
+        else:
+            current_chunk.append(word)
+
+    if current_chunk:
+        chunks.append(" ".join(current_chunk))
+
+    return chunks
 
 # Helper function to call Hugging Face API for sentiment analysis
 def analyze_sentiment_hf(text):
@@ -207,11 +221,16 @@ def analyze_sentiment_hf(text):
     }
     try:
         response = requests.post(f"{HF_API_URL}/cardiffnlp/twitter-xlm-roberta-base-sentiment", headers=headers, json=data)
-        response.raise_for_status()
+        response.raise_for_status()  # Raise an exception for HTTP errors
+
         sentiment = response.json()
         if isinstance(sentiment, list) and len(sentiment) > 0:
-            best_sentiment = max(sentiment[0], key=lambda x: x.get('score', 0))
-            return best_sentiment.get('label', 'Unknown'), best_sentiment.get('score', 0)
+            sentiment_list = sentiment[0]  # Access the first list
+            if isinstance(sentiment_list, list):
+                best_sentiment = max(sentiment_list, key=lambda x: x.get('score', 0))
+                sentiment_label = best_sentiment.get('label', 'Unknown sentiment')
+                sentiment_score = best_sentiment.get('score', 0)
+                return sentiment_label, sentiment_score
         return "Unexpected response format", 0
     except requests.exceptions.RequestException as e:
         print(f"Error making API request for sentiment analysis: {e}")
@@ -225,25 +244,19 @@ def home():
 
         # Detect the language of the text
         detected_language = translator.detect(input_text).lang
+
+        # Convert the detected language code to full name
         detected_language_name = LANGUAGES.get(detected_language, detected_language)
 
-        # Translate if not English
+        # If the language is not English, translate it
         if detected_language != 'en':
-            chunks = split_text_for_translation(input_text)
-            translated_chunks = []
-            for chunk in chunks:
-                try:
-                    translated_chunks.append(translator.translate(chunk, dest='en').text)
-                except Exception as e:
-                    print(f"Error translating chunk: {e}")
-                    translated_chunks.append(chunk)  # Fallback to original text
-            translated_text = " ".join(translated_chunks)
-            translated_language = 'English'
+            translated_text = translator.translate(input_text, dest='en').text
+            translated_language = 'English'  # Since we always translate to English
         else:
             translated_text = input_text
-            translated_language = None
+            translated_language = None  # No translation if the text is already in English
 
-        # Split text into chunks for summarization
+        # Split text into chunks if necessary
         chunks = split_text_into_chunks(translated_text, max_tokens=512)
         summarized_chunks = [summarize_text_hf(chunk) for chunk in chunks]
 
@@ -252,22 +265,13 @@ def home():
         if len(combined_summary.split()) > 512:
             combined_summary = " ".join(combined_summary.split()[:512])
 
-        # Get sentiment based on combined summary
+        # Get sentiment (based on combined summaries)
         sentiment, sentiment_score = analyze_sentiment_hf(combined_summary)
 
-        # Render results
-        return render_template(
-            "index.html",
-            sentiment=sentiment,
-            sentiment_score=sentiment_score,
-            summary=combined_summary,
-            original_text=input_text,
-            translated_text=translated_text,
-            detected_language_name=detected_language_name,
-            translated_language=translated_language
-        )
+        # Return the results, including translated_text and sentiment score
+        return render_template("index.html", sentiment=sentiment, sentiment_score=sentiment_score, summary=combined_summary, original_text=input_text, translated_text=translated_text, detected_language_name=detected_language_name, translated_language=translated_language)
 
-    return render_template("index.html")
+    return render_template("index.html", sentiment=None, sentiment_score=None, summary=None, original_text=None, translated_text=None, detected_language_name=None, translated_language=None)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True) 
