@@ -1,4 +1,4 @@
-/* General styles */  
+/* General styles */   
 body {
     font-family: 'Helvetica Neue', sans-serif;
     margin: 0;
@@ -87,6 +87,7 @@ p {
 
 .sentiment {
     font-weight: bold;
+    font-size: 1.2rem;
 }
 
 .sentiment.positive {
@@ -105,15 +106,33 @@ p {
     margin-top: 10px;
     font-size: 1rem;
     color: #ddd;
+    line-height: 1.6;
 }
 
 .translated-text {
     margin-top: 20px;
     font-size: 1rem;
     color: #ddd;
+    line-height: 1.6;
 }
 
 h4 {
     font-size: 1.1rem;
     color: #bbb;
+}
+
+/* Adding additional styles for better UI */
+.result-section h3, .result-section h4 {
+    color: #fff;
+    margin-bottom: 10px;
+}
+
+textarea, button {
+    border-radius: 10px;
+    outline: none;
+}
+
+/* Optional: Animation for when the sentiment result is displayed */
+.sentiment {
+    transition: color 0.5s ease;
 }
