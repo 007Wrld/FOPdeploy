@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 from googletrans import Translator
 import requests
-import math
 
 app = Flask(__name__)
 
@@ -172,13 +171,6 @@ LANGUAGES = {
 }
 
 
-# Helper function to split the text into manageable chunks (1000 words per chunk)
-def split_text_into_chunks(text, chunk_size=500):
-    words = text.split()
-    num_chunks = math.ceil(len(words) / chunk_size)
-    chunks = [' '.join(words[i * chunk_size:(i + 1) * chunk_size]) for i in range(num_chunks)]
-    return chunks
-
 # Helper function to summarize text using Hugging Face API
 def summarize_text_hf(text):
     headers = {
@@ -244,18 +236,13 @@ def home():
             translated_text = input_text
             translated_language = None  # No translation if the text is already in English
 
-        # Check the token count (using word count as a proxy for tokens)
-        token_count = len(translated_text.split())
-
-        # If the translated text has more than 500 tokens, split into chunks
-        if token_count > 500:
-            chunks = split_text_into_chunks(translated_text)
-            summarized_chunks = [summarize_text_hf(chunk) for chunk in chunks]
-            summarized_text = ' '.join(summarized_chunks)  # Combine the summaries
+        # Summarize the text (only if it's longer than 250 words)
+        if len(translated_text.split()) > 250:
+            summarized_text = summarize_text_hf(translated_text)
         else:
-            summarized_text = translated_text  # No summarization needed if less than 500 tokens
+            summarized_text = translated_text
 
-        # Perform sentiment analysis on either summarized or translated text
+        # Get sentiment (based on summarized or original text)
         sentiment, sentiment_score = analyze_sentiment_hf(summarized_text)
 
         # Return the results, including translated_text and sentiment score
