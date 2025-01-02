@@ -1,6 +1,6 @@
+import requests
 from flask import Flask, request, jsonify, render_template
 from googletrans import Translator
-import requests
 
 app = Flask(__name__)
 
@@ -10,187 +10,28 @@ HF_API_URL = 'https://api-inference.huggingface.co/models'
 
 translator = Translator()
 
-# Language code to full name mapping
-LANGUAGES = {
-    'af': 'Afrikaans',
-    'sq': 'Albanian',
-    'ar': 'Arabic',
-    'hy': 'Armenian',
-    'bn': 'Bengali',
-    'bs': 'Bosnian',
-    'ca': 'Catalan',
-    'hr': 'Croatian',
-    'cs': 'Czech',
-    'da': 'Danish',
-    'nl': 'Dutch',
-    'en': 'English',
-    'eo': 'Esperanto',
-    'et': 'Estonian',
-    'tl': 'Filipino (Tagalog)',
-    'ceb': 'Cebuano',
-    'fi': 'Finnish',
-    'fr': 'French',
-    'de': 'German',
-    'el': 'Greek',
-    'gu': 'Gujarati',
-    'hi': 'Hindi',
-    'hu': 'Hungarian',
-    'is': 'Icelandic',
-    'id': 'Indonesian',
-    'it': 'Italian',
-    'ja': 'Japanese',
-    'jw': 'Javanese',
-    'ka': 'Georgian',
-    'km': 'Khmer',
-    'ko': 'Korean',
-    'la': 'Latin',
-    'lv': 'Latvian',
-    'lt': 'Lithuanian',
-    'mk': 'Macedonian',
-    'ml': 'Malayalam',
-    'mr': 'Marathi',
-    'ne': 'Nepali',
-    'pl': 'Polish',
-    'pt': 'Portuguese',
-    'ro': 'Romanian',
-    'ru': 'Russian',
-    'sr': 'Serbian',
-    'si': 'Sinhala',
-    'sk': 'Slovak',
-    'sl': 'Slovenian',
-    'es': 'Spanish',
-    'su': 'Sundanese',
-    'sw': 'Swahili',
-    'sv': 'Swedish',
-    'ta': 'Tamil',
-    'te': 'Telugu',
-    'th': 'Thai',
-    'tr': 'Turkish',
-    'uk': 'Ukrainian',
-    'ur': 'Urdu',
-    'vi': 'Vietnamese',
-    'cy': 'Welsh',
-    'xh': 'Xhosa',
-    'zh-cn': 'Chinese (Simplified)',
-    'zh-tw': 'Chinese (Traditional)',
-    'he': 'Hebrew',
-    'pa': 'Punjabi',
-    'sd': 'Sindhi',
-    'ilo': 'Ilokano',
-    'az': 'Azerbaijani',
-    'tl': 'Tagalog',
-    'sq': 'Albanian',
-    'fa': 'Persian',
-    'ta': 'Tamil',
-    'tr': 'Turkish',
-    'zh': 'Chinese',
-    'ja': 'Japanese',
-    'ko': 'Korean',
-    'it': 'Italian',
-    'en': 'English',
-    'la': 'Latin',
-    'ml': 'Malayalam',
-    'bs': 'Bosnian',
-    'he': 'Hebrew',
-    'ta': 'Tamil',
-    'pa': 'Punjabi',
-    'la': 'Latin',
-    'mi': 'Maori',
-    'sq': 'Albanian',
-    'ga': 'Irish',
-    'eo': 'Esperanto',
-    'su': 'Sundanese',
-    'bn': 'Bengali',
-    'no': 'Norwegian',
-    'si': 'Sinhala',
-    'uk': 'Ukrainian',
-    'cy': 'Welsh',
-    'km': 'Khmer',
-    'ht': 'Haitian Creole',
-    'sw': 'Swahili',
-    'tl': 'Tagalog',
-    'pl': 'Polish',
-    'sl': 'Slovenian',
-    'tk': 'Turkmen',
-    'ro': 'Romanian',
-    'el': 'Greek',
-    'no': 'Norwegian',
-    'la': 'Latin',
-    'de': 'German',
-    'fr': 'French',
-    'en': 'English',
-    'tr': 'Turkish',
-    'cs': 'Czech',
-    'sr': 'Serbian',
-    'si': 'Sinhala',
-    'sk': 'Slovak',
-    'gu': 'Gujarati',
-    'pa': 'Punjabi',
-    'hi': 'Hindi',
-    'ta': 'Tamil',
-    'be': 'Belarusian',
-    'mr': 'Marathi',
-    'az': 'Azerbaijani',
-    'am': 'Amharic',
-    'ps': 'Pashto',
-    'km': 'Khmer',
-    'ml': 'Malayalam',
-    'te': 'Telugu',
-    'or': 'Odia',
-    'kn': 'Kannada',
-    'zh': 'Chinese',
-    'ht': 'Haitian Creole',
-    'ur': 'Urdu',
-    'vi': 'Vietnamese',
-    'el': 'Greek',
-    'hy': 'Armenian',
-    'fi': 'Finnish',
-    'en': 'English',
-    'sv': 'Swedish',
-    'ja': 'Japanese',
-    'ko': 'Korean',
-    'ml': 'Malayalam',
-    'fr': 'French',
-    'pt': 'Portuguese',
-    'zh-cn': 'Chinese (Simplified)',
-    'zh-tw': 'Chinese (Traditional)',
-    'th': 'Thai',
-    'tr': 'Turkish',
-    'fi': 'Finnish',
-    'sr': 'Serbian',
-    'pl': 'Polish',
-    'ro': 'Romanian',
-    'tr': 'Turkish',
-    'en': 'English',
-    'ru': 'Russian',
-    'he': 'Hebrew',
-    'mr': 'Marathi',
-    'ja': 'Japanese',
-    'fr': 'French',
-    'de': 'German',
-}
+# Function to chunk text into smaller parts based on token count (500 tokens)
+def chunk_text(text, max_tokens=500):
+    words = text.split()  # Split the text into words
+    chunks = []
+    chunk = []
+    token_count = 0
 
+    for word in words:
+        token_count += len(word.split())  # Count tokens (words in this case)
+        if token_count > max_tokens:
+            chunks.append(" ".join(chunk))  # Join chunk into a string and add to list
+            chunk = [word]  # Start a new chunk
+            token_count = len(word.split())  # Reset token count for new chunk
+        else:
+            chunk.append(word)
+    
+    if chunk:
+        chunks.append(" ".join(chunk))  # Append the final chunk
+    
+    return chunks
 
-# Helper function to summarize text using Hugging Face API
-def summarize_text_hf(text):
-    headers = {
-        "Authorization": f"Bearer {HF_API_TOKEN}"
-    }
-    data = {
-        "inputs": text
-    }
-    try:
-        response = requests.post(f"{HF_API_URL}/jaesani/large_eng_summarizer", headers=headers, json=data)
-        response.raise_for_status()  # Raise exception for HTTP errors
-        summary = response.json()
-        if isinstance(summary, list) and len(summary) > 0:
-            return summary[0].get('summary_text', "Error with summarization")
-        return "Error with summarization response"
-    except requests.exceptions.RequestException as e:
-        print(f"Error making API request for summarization: {e}")
-        return "Error with summarization API"
-
-# Helper function to call Hugging Face API for sentiment analysis
+# Function to get sentiment from Hugging Face
 def analyze_sentiment_hf(text):
     headers = {
         "Authorization": f"Bearer {HF_API_TOKEN}"
@@ -200,12 +41,11 @@ def analyze_sentiment_hf(text):
     }
     try:
         response = requests.post(f"{HF_API_URL}/cardiffnlp/twitter-xlm-roberta-base-sentiment", headers=headers, json=data)
-        response.raise_for_status()  # Raise an exception for HTTP errors
-
+        response.raise_for_status()
+        
         sentiment = response.json()
-        # Handle nested structure and find the sentiment with the highest score
         if isinstance(sentiment, list) and len(sentiment) > 0:
-            sentiment_list = sentiment[0]  # Access the first list
+            sentiment_list = sentiment[0]
             if isinstance(sentiment_list, list):
                 best_sentiment = max(sentiment_list, key=lambda x: x.get('score', 0))
                 sentiment_label = best_sentiment.get('label', 'Unknown sentiment')
@@ -213,42 +53,49 @@ def analyze_sentiment_hf(text):
                 return sentiment_label, sentiment_score
         return "Unexpected response format", 0
     except requests.exceptions.RequestException as e:
-        print(f"Error making API request for sentiment analysis: {e}")
-        return "Error with sentiment analysis API", 0
+        print(f"Error with sentiment analysis: {e}")
+        return "Error", 0
 
-# Route to handle the form and display results
+# Route for processing the input text and displaying results
 @app.route("/", methods=["GET", "POST"])
 def home():
     if request.method == "POST":
         input_text = request.form["text"]
 
-        # Detect the language of the text
+        # Detect the language of the input text
         detected_language = translator.detect(input_text).lang
-
-        # Convert the detected language code to full name
         detected_language_name = LANGUAGES.get(detected_language, detected_language)
 
-        # If the language is not English, translate it
+        # Translate to English if the language is not English
         if detected_language != 'en':
             translated_text = translator.translate(input_text, dest='en').text
-            translated_language = 'English'  # Since we always translate to English
+            translated_language = 'English'
         else:
             translated_text = input_text
-            translated_language = None  # No translation if the text is already in English
+            translated_language = None
 
-        # Summarize the text (only if it's longer than 250 words)
-        if len(translated_text.split()) > 250:
-            summarized_text = summarize_text_hf(translated_text)
-        else:
-            summarized_text = translated_text
+        # Chunk text if it's long
+        chunks = chunk_text(translated_text)
 
-        # Get sentiment (based on summarized or original text)
-        sentiment, sentiment_score = analyze_sentiment_hf(summarized_text)
+        # Analyze sentiment for each chunk and aggregate the results
+        sentiment_labels = []
+        sentiment_scores = []
 
-        # Return the results, including translated_text and sentiment score
-        return render_template("index.html", sentiment=sentiment, sentiment_score=sentiment_score, summary=summarized_text, original_text=input_text, translated_text=translated_text, detected_language_name=detected_language_name, translated_language=translated_language)
+        for chunk in chunks:
+            sentiment, sentiment_score = analyze_sentiment_hf(chunk)
+            sentiment_labels.append(sentiment)
+            sentiment_scores.append(sentiment_score)
 
-    return render_template("index.html", sentiment=None, sentiment_score=None, summary=None, original_text=None, translated_text=None, detected_language_name=None, translated_language=None)
+        # Aggregate sentiment (for simplicity, using the most frequent sentiment label)
+        sentiment = max(set(sentiment_labels), key=sentiment_labels.count)
+        sentiment_score = sum(sentiment_scores) / len(sentiment_scores) if sentiment_scores else 0
+
+        # Return the result to the user
+        return render_template("index.html", sentiment=sentiment, sentiment_score=sentiment_score, 
+                               original_text=input_text, translated_text=translated_text, 
+                               detected_language_name=detected_language_name, translated_language=translated_language)
+
+    return render_template("index.html", sentiment=None, sentiment_score=None)
 
 if __name__ == "__main__":
     app.run(debug=True)
