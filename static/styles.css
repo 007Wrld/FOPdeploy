@@ -15,7 +15,126 @@ body {
 .container {
     text-align: center;
     max-width: 800px;
+    margin: 0 20px;/* General styles */  
+body {
+    font-family: 'Helvetica Neue', sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* Ensures the body takes at least full height of the screen */
+    background-color: #2a2a2a;  /* Dark background */
+    color: white;
+    overflow-y: auto; /* Allow vertical scrolling */
+}
+
+.container {
+    text-align: center;
+    max-width: 800px;
     margin: 0 20px;
+    padding: 20px;
+    background-color: #333;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box; /* Ensures padding and borders are included in width/height calculation */
+}
+
+.hero-section {
+    margin-bottom: 30px;
+}
+
+h1 {
+    font-size: 3rem;
+    margin: 0;
+    color: #fff;
+}
+
+p {
+    font-size: 1.2rem;
+    color: #bbb;
+}
+
+.input-form textarea {
+    width: 100%;
+    max-width: 100%; /* Ensure the textarea never exceeds the width of its container */
+    padding: 15px;
+    margin-top: 20px;
+    border-radius: 10px;
+    border: 1px solid #666;
+    background-color: #444;
+    color: white;
+    font-size: 1.1rem;
+    line-height: 1.5;
+    transition: background-color 0.3s ease;
+    resize: none; /* Disable manual resizing */
+    overflow-y: auto; /* Allows the textarea to scroll vertically */
+    overflow-x: auto; /* Allows the textarea to scroll horizontally if content exceeds */
+    max-height: 200px; /* Set maximum height for the textarea */
+    height: auto; /* Let it expand based on content */
+    box-sizing: border-box; /* Ensure padding and borders are included in width calculation */
+}
+
+.input-form textarea:focus {
+    background-color: #555;
+    border-color: #fff;
+}
+
+.input-form button {
+    padding: 10px 30px;
+    margin-top: 20px;
+    background-color: #1db954; /* Spotify-like green */
+    border: none;
+    border-radius: 30px;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.input-form button:hover {
+    background-color: #1ed760; /* Lighter green on hover */
+}
+
+.result-section {
+    margin-top: 40px;
+    text-align: left;
+    color: white;
+}
+
+.sentiment {
+    font-weight: bold;
+}
+
+.sentiment.positive {
+    color: #1db954;
+}
+
+.sentiment.negative {
+    color: #e0245e;
+}
+
+.sentiment.neutral {
+    color: #b3b3b3;
+}
+
+.original-text, .summary-text {
+    margin-top: 10px;
+    font-size: 1rem;
+    color: #ddd;
+}
+
+.translated-text {
+    margin-top: 20px;
+    font-size: 1rem;
+    color: #ddd;
+}
+
+h4 {
+    font-size: 1.1rem;
+    color: #bbb;
+}
+
     padding: 20px;
     background-color: #333;
     border-radius: 15px;
