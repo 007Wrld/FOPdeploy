@@ -190,6 +190,27 @@ def summarize_text_hf(text):
         print(f"Error making API request for summarization: {e}")
         return "Error with summarization API"
 
+# Helper function to split text into chunks
+def split_text_into_chunks(text, max_tokens=512):
+    words = text.split()
+    chunks = []
+    current_chunk = []
+    current_tokens = 0
+
+    for word in words:
+        current_tokens += len(word)  # Approximate token count using word length
+        if current_tokens > max_tokens:
+            chunks.append(" ".join(current_chunk))
+            current_chunk = [word]
+            current_tokens = len(word)
+        else:
+            current_chunk.append(word)
+
+    if current_chunk:
+        chunks.append(" ".join(current_chunk))
+
+    return chunks
+
 # Helper function to call Hugging Face API for sentiment analysis
 def analyze_sentiment_hf(text):
     headers = {
@@ -203,7 +224,6 @@ def analyze_sentiment_hf(text):
         response.raise_for_status()  # Raise an exception for HTTP errors
 
         sentiment = response.json()
-        # Handle nested structure and find the sentiment with the highest score
         if isinstance(sentiment, list) and len(sentiment) > 0:
             sentiment_list = sentiment[0]  # Access the first list
             if isinstance(sentiment_list, list):
@@ -236,17 +256,20 @@ def home():
             translated_text = input_text
             translated_language = None  # No translation if the text is already in English
 
-        # Summarize the text (only if it's longer than 250 words)
-        if len(translated_text.split()) > 250:
-            summarized_text = summarize_text_hf(translated_text)
-        else:
-            summarized_text = translated_text
+        # Split text into chunks if necessary
+        chunks = split_text_into_chunks(translated_text, max_tokens=512)
+        summarized_chunks = [summarize_text_hf(chunk) for chunk in chunks]
 
-        # Get sentiment (based on summarized or original text)
-        sentiment, sentiment_score = analyze_sentiment_hf(summarized_text)
+        # Combine summaries while ensuring total length is under 512 tokens
+        combined_summary = " ".join(summarized_chunks)
+        if len(combined_summary.split()) > 512:
+            combined_summary = " ".join(combined_summary.split()[:512])
+
+        # Get sentiment (based on combined summaries)
+        sentiment, sentiment_score = analyze_sentiment_hf(combined_summary)
 
         # Return the results, including translated_text and sentiment score
-        return render_template("index.html", sentiment=sentiment, sentiment_score=sentiment_score, summary=summarized_text, original_text=input_text, translated_text=translated_text, detected_language_name=detected_language_name, translated_language=translated_language)
+        return render_template("index.html", sentiment=sentiment, sentiment_score=sentiment_score, summary=combined_summary, original_text=input_text, translated_text=translated_text, detected_language_name=detected_language_name, translated_language=translated_language)
 
     return render_template("index.html", sentiment=None, sentiment_score=None, summary=None, original_text=None, translated_text=None, detected_language_name=None, translated_language=None)
 
