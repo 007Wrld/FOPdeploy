@@ -256,43 +256,50 @@ textarea, button {
     transition: color 0.5s ease;
 }
 
-/* How to Use Section */
-.how-to-use {
-    position: relative;
-    display: inline-block;
-    margin-top: 20px;
-    cursor: pointer;
-    text-align: center;
-}
-
-.how-to-use-button {
-    background-color: #1db954;
-    padding: 10px 20px;
-    border-radius: 20px;
+/* Info button */
+.info-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: #444;
     color: white;
-    font-size: 1rem;
-    font-weight: bold;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+    text-align: center;
+    line-height: 40px;
+    cursor: pointer;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
     transition: background-color 0.3s ease;
 }
 
-.how-to-use-button:hover {
-    background-color: #1ed760;
+.info-button:hover {
+    background-color: #555;
 }
 
-.tooltip {
-    display: none;
-    position: absolute;
-    top: 110%; /* Below the button */
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #444;
+/* Modal styles */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    background-color: rgba(0, 0, 0, 0.8); /* Black with opacity */
+    overflow: auto; /* Enable scroll if needed */
+}
+
+.modal-content {
+    background-color: #333;
+    margin: 10% auto; /* 10% from the top and centered */
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%; /* Could be more or less, depending on screen size */
+    max-width: 600px;
     color: white;
     text-align: left;
-    padding: 15px;
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    z-index: 1;
-    width: 300px;
-    max-width: 90%;
-    font-size: 0.9rem;
-   
+    box-shadow: 0 5px 15px rgba(0, 
+
