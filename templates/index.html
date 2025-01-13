@@ -13,23 +13,7 @@
             <h1>FOP Sentiment Analysis</h1>
         </div>
         
-    <button class="info-button" onclick="toggleInfoModal()">?</button>
-</div>
-
-<!-- Info Modal -->
-<div id="infoModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="toggleInfoModal()">&times;</span>
-        <h2>About This App</h2>
-        <p> The FOP Sentiment Analysis app analyzes the sentiment of any given text. It detects the language of the input text, translates it into English if necessary, summarizes the text if it's lengthy, and provides a sentiment analysis with a score. Here's how to use it:</p>
-        <ul>
-            <li>Enter the text you want to analyze in the text box.</li>
-            <li>The app will automatically detect the language and translate it to English if necessary.</li>
-            <li>It summarizes the text (if it's long) and performs sentiment analysis.</li>
-            <li>The results will show the sentiment, a summary (if applicable), and the detected language.</li>
-        </ul>
-    </div>
-</div>
+  
 </div>
 
         <!-- Input Form -->
@@ -68,5 +52,23 @@
             </div>
         {% endif %}
     </div>
+
+      <button class="info-button" onclick="toggleInfoModal()">?</button>
+</div>
+
+<!-- Info Modal -->
+<div id="infoModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="toggleInfoModal()">&times;</span>
+        <h2>About This App</h2>
+        <p> The FOP Sentiment Analysis app analyzes the sentiment of any given text. It detects the language of the input text, translates it into English if necessary, summarizes the text if it's lengthy, and provides a sentiment analysis with a score. Here's how to use it:</p>
+        <ul>
+            <li>Enter the text you want to analyze in the text box.</li>
+            <li>The app will automatically detect the language and translate it to English if necessary.</li>
+            <li>It summarizes the text (if it's long) and performs sentiment analysis.</li>
+            <li>The results will show the sentiment, a summary (if applicable), and the detected language.</li>
+        </ul>
+    </div>
+</div>
 </body>
 </html>
